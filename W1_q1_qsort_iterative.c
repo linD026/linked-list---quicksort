@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <time.h>
 
 typedef struct __node {
@@ -167,7 +168,14 @@ int main(int argc, char **argv) {
   size_t count = 20;
   node_t *list = NULL;
 
-  srandom(time(NULL));
+  unsigned int seed = (uintptr_t)*argv;
+
+  time_t current_time;
+  srandom(seed & time(&current_time));
+  struct tm *timeinfo;
+  timeinfo = localtime(&current_time);
+  printf("now: %s", asctime(timeinfo));
+
   while (count--) {
     list =
         list_make_node_t(list, self_random(random() % 1024, random() % 1024));
