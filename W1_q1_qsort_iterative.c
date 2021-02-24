@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <time.h>
 
 typedef struct __node {
@@ -106,24 +105,76 @@ int self_random(int seed_f, int seed_s) {
   return sn;
 }
 
+#define print_left                                                             \
+  printf("left:");                                                             \
+  list_display(left);
+
+#define print_result                                                           \
+  printf("top: %d\nresult:", top);                                             \
+  list_display(result);
+
+#define print_stack                                                            \
+  printf("stack\n");                                                           \
+  for (int i = top; i >= 0; i--) {                                             \
+    printf("%d:", i);                                                          \
+    list_display(stack[i]);                                                    \
+  }
+
+void quicksort_iterative(node_t **list) {
+  if (!*list)
+    return;
+
+#define MAX 300
+  node_t *stack[MAX] = {0};
+  int top = -1;
+  stack[++top] = *list;
+  node_t *partition = NULL;
+  node_t *result = NULL;
+
+  while (top >= 0) {
+    partition = stack[top--];
+    if (partition && partition->next != NULL) {
+      node_t *pivot = partition;
+      int value = pivot->value;
+      node_t *p = pivot->next;
+      pivot->next = NULL;
+      node_t *left = NULL, *right = NULL;
+      while (p) {
+        node_t *n = p;
+        p = p->next;
+        list_add_node_t(n->value >= value ? &right : &left, n);
+      }
+      if (left != NULL)
+        list_concat(&left, pivot);
+      else
+        left = pivot;
+      if (right)
+        stack[++top] = right;
+      if (left)
+        stack[++top] = left;
+    } else {
+      top++;
+      while (top >= 0 && stack[top]->next == NULL) {
+        node_t *temp = stack[top--];
+        list_concat(&result, temp);
+      }
+    }
+  }
+  *list = result;
+}
+
 int main(int argc, char **argv) {
   size_t count = 20;
   node_t *list = NULL;
 
-  unsigned int seed = (uintptr_t)*argv;
-
-  time_t current_time;
-  srandom(seed & time(&current_time));
-  struct tm *timeinfo;
-  timeinfo = localtime(&current_time);
-  printf("now: %s", asctime(timeinfo));
- 
+  srandom(time(NULL));
   while (count--) {
-    list = list_make_node_t(list, self_random(random() % 1024, random() % 1024));
+    list =
+        list_make_node_t(list, self_random(random() % 1024, random() % 1024));
   }
 
   list_display(list);
-  quicksort(&list);
+  quicksort_iterative(&list);
   list_display(list);
 
   // forget list_free
